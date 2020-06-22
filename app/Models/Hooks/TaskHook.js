@@ -1,7 +1,7 @@
 'use strict'
 
-const Mail = use('Mail')
-const Helpers = use('Helpers')
+const Kue = use('Kue')
+const Job = use('App/Jobs/NewTaskMail')
 
 const TaskHook = exports = module.exports = {}
 
@@ -13,20 +13,5 @@ TaskHook.sendNewTaskMail = async (taskInstance) => {
     const file = await taskInstance.file().fetch()
     const { title } = taskInstance
 
-    await Mail.send(
-        ['emails.new_task'],
-        { username, title, hasAttachment: !!file },
-        message => {
-            message
-                .to(email)
-                .from('arienemaiara@gmail.com', 'Adonis API')
-                .subject('A new task was assigned for you')
-
-            if (file) {
-                message.attach(Helpers.tmpPath(`uploads/${file.file}`), {
-                    filename: file.name
-                })
-            }
-        }
-    )
+    Kue.dispatch(Job.key, { username, email, file, title }, { attempts: 3 })
 }
