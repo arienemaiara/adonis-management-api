@@ -4,18 +4,15 @@ const Project = use('App/Models/Project')
 
 class ProjectController {
 
-  async index ({ request, response, view }) {
-    try {
-      const projects = await Project.query()
-        .with('user')
-        .fetch()
+  async index ({ request }) {
 
-      return projects
-    } catch (error) {
-      return response
-        .status(error.status)
-        .send({ error: { message: 'Something went wrong.' } })
-    }
+    const { page = 1 } = request.get()
+
+    const projects = await Project.query()
+      .with('user')
+      .paginate(page)
+
+    return projects
   }
 
   async store ({ request, response, auth }) {
